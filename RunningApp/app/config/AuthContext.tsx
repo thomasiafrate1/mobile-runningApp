@@ -1,32 +1,34 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
-import { auth } from "../config/firebaseConfig";
+import { auth } from "./firebaseConfig";
 
-// Définition du type du contexte
+// ✅ Définition du type pour éviter l'erreur
 type AuthContextType = {
   user: User | null;
   loading: boolean;
   logout: () => Promise<void>;
 };
 
-// Création du contexte avec une valeur par défaut
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// ✅ Création du contexte avec type sécurisé
+const AuthContext = createContext<AuthContextType | null>(null);
 
-// Fournisseur du contexte
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user); // ✅ Corrige le problème de typage
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      console.log("👤 Utilisateur détecté :", firebaseUser);
+      setUser(firebaseUser);
       setLoading(false);
     });
+
     return () => unsubscribe();
   }, []);
 
   const logout = async () => {
     await signOut(auth);
+    console.log("🚪 Déconnexion réussie");
   };
 
   return (
@@ -36,7 +38,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Hook pour utiliser le contexte
+export default AuthProvider;
+
+// ✅ Vérifie que `useAuth` est bien utilisé dans un `AuthProvider`
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -44,5 +48,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-export default AuthProvider;

@@ -2,17 +2,10 @@ import React, { useState } from "react";
 import { View, Text, TextInput, Button, Alert } from "react-native";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../config/firebaseConfig";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { FirebaseError } from "firebase/app";
+import { useRouter } from "expo-router";
 
-type AuthStackParamList = {
-  Login: undefined;
-  Register: undefined;
-};
-
-type NavigationProps = StackNavigationProp<AuthStackParamList, "Register">;
-
-export default function RegisterScreen({ navigation }: { navigation: NavigationProps }) {
+export default function RegisterScreen() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -20,20 +13,20 @@ export default function RegisterScreen({ navigation }: { navigation: NavigationP
   const handleRegister = async () => {
     if (password !== confirmPassword) {
       Alert.alert("Erreur", "Les mots de passe ne correspondent pas.");
+      console.log("❌ Mot de passe non identique !");
       return;
     }
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      Alert.alert("Compte créé avec succès !");
-      navigation.navigate("Login");
-    } catch (error: unknown) {
-      if (error instanceof FirebaseError) {
-        Alert.alert("Erreur", error.message);
-      } else {
-        Alert.alert("Erreur inconnue");
-      }
-      console.error("Erreur d'inscription:", error);
+      console.log(`🔄 Tentative de création de compte pour : ${email}`);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      console.log("✅ Compte créé avec succès !", userCredential.user);
+
+      Alert.alert("Succès", "Compte créé avec succès !");
+      router.push("/login"); // Redirection vers la connexion
+    } catch (error) {
+      console.error("❌ Erreur lors de l'inscription :", error);
+     
     }
   };
 
@@ -44,7 +37,7 @@ export default function RegisterScreen({ navigation }: { navigation: NavigationP
       <TextInput placeholder="Mot de passe" secureTextEntry onChangeText={setPassword} />
       <TextInput placeholder="Confirmer le mot de passe" secureTextEntry onChangeText={setConfirmPassword} />
       <Button title="S'inscrire" onPress={handleRegister} />
-      <Button title="Retour à la connexion" onPress={() => navigation.navigate("Login")} />
+      <Button title="Retour à la connexion" onPress={() => router.push("/login")} />
     </View>
   );
 }
