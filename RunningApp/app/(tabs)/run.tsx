@@ -1,53 +1,62 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Button } from "react-native";
+import { View, Text, Button, Platform } from "react-native";
 import * as Location from "expo-location";
 import { useAuth } from "../config/AuthContext";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../config/firebaseConfig";
+import MapView, { Marker, Polyline } from "react-native-maps";
 
 export default function RunScreen() {
   const { user } = useAuth();
+  const isMobile = Platform.OS !== "web";
   const [isRunning, setIsRunning] = useState(false);
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [previousLocation, setPreviousLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [distance, setDistance] = useState(0);
+  const [route, setRoute] = useState<{ latitude: number; longitude: number }[]>([]); // 🚀 Stocke l'itinéraire GPS
 
   useEffect(() => {
     if (isRunning) {
       const watchPosition = async () => {
         const { granted } = await Location.requestForegroundPermissionsAsync();
         if (!granted) {
-          console.error("Permission de localisation refusée !");
+          console.error("❌ Permission de localisation refusée !");
           return;
         }
-
+  
         const subscription = await Location.watchPositionAsync(
           { accuracy: Location.Accuracy.High, distanceInterval: 5 },
           (newLocation) => {
             if (!newLocation.coords) return;
+  
             const coords = { latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude };
-
             setLocation(coords);
-            if (previousLocation) {
-              const d = getDistance(previousLocation, coords);
-              setDistance((prev) => prev + d);
-            }
-            setPreviousLocation(coords);
+  
+            // ✅ Vérifier si `previousLocation` existe avant d'ajouter la distance
+            setPreviousLocation((prev) => {
+              if (prev) {
+                const d = getDistance(prev, coords);
+                setDistance((dist) => dist + d); // ✅ Mise à jour correcte en temps réel
+              }
+              return coords; // ✅ Mise à jour de `previousLocation`
+            });
           }
         );
-
+  
         return () => subscription.remove();
       };
       watchPosition();
     }
   }, [isRunning]);
+  
 
   const startRun = () => {
     setIsRunning(true);
     setStartTime(new Date());
     setDistance(0);
     setPreviousLocation(null);
+    setRoute([]); // 🚀 Réinitialise l'itinéraire
   };
 
   const stopRun = async () => {
@@ -72,6 +81,7 @@ export default function RunScreen() {
         date: new Date(), // Date de la course
         distance: distance.toFixed(2), // Distance en mètres
         duration, // Durée en secondes
+        route, // 🚀 Stocke l'itinéraire GPS
       });
   
       console.log("✅ Course enregistrée avec succès ! ID :", docRef.id);
@@ -79,11 +89,31 @@ export default function RunScreen() {
       console.error("❌ Erreur lors de l'enregistrement :", error);
     }
   };
-  
 
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
       <Text>🏃 Course</Text>
+
+      {isMobile && location ? ( // Vérifie que location est défini
+  <MapView
+    initialRegion={{
+      latitude: location.latitude,
+      longitude: location.longitude,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    }}
+    style={{ width: "100%", height: 400 }}
+    showsUserLocation
+  >
+    <Marker coordinate={location} title="Vous êtes ici" />
+    <Polyline coordinates={route || []} strokeWidth={3} strokeColor="blue" />
+  </MapView>
+) : (
+  <Text>🌍 Carte indisponible sur le web ou en attente de position...</Text>
+)}
+
+
+
       <Text>Connecté en tant que : {user?.email ?? "Utilisateur inconnu"}</Text>
       <Text>📍 Position : {location ? `${location.latitude}, ${location.longitude}` : "En attente..."}</Text>
       <Text>📏 Distance parcourue : {distance.toFixed(2)} m</Text>
