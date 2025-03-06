@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, collection, addDoc } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
@@ -20,4 +20,4 @@ const realtimeDB = getDatabase(app);
 
 export default firebaseConfig;
 
-export { auth, db, realtimeDB };
+export { auth, db, realtimeDB, collection, addDoc };

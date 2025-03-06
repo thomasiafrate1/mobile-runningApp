@@ -1,10 +1,13 @@
 import React from "react";
-import { AuthProvider } from "./app/config/AuthContext.js";
-import AppNavigator from "./app/navigation/AppNavigator.js";
+import { View, Text } from "react-native";
+import AuthProvider from "./app/config/AuthContext"; // Vérifie bien que le chemin est bon !
+import AppNavigator from "./app/navigation/AppNavigator";
 
 export default function App() {
+  console.log("🔥 App.tsx exécuté !");
+
   return (
-    <AuthProvider>
+    <AuthProvider> {/* 🔥 AuthProvider englobe TOUT */}
       <AppNavigator />
     </AuthProvider>
   );

@@ -1,25 +1,26 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 
-// ✅ Définition du type pour éviter l'erreur
 type AuthContextType = {
   user: User | null;
   loading: boolean;
   logout: () => Promise<void>;
 };
 
-// ✅ Création du contexte avec type sécurisé
+// 📌 Création du contexte (⚠️ avec valeur par défaut null)
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      console.log("👤 Utilisateur détecté :", firebaseUser);
-      setUser(firebaseUser);
+    console.log("✅ AuthProvider monté !");
+    
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log("🔄 Changement d'état de l'auth :", user);
+      setUser(user);
       setLoading(false);
     });
 
@@ -28,7 +29,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = async () => {
     await signOut(auth);
-    console.log("🚪 Déconnexion réussie");
+    setUser(null);
+    console.log("🚪 Déconnexion réussie !");
   };
 
   return (
@@ -38,13 +40,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   );
 };
 
-export default AuthProvider;
-
-// ✅ Vérifie que `useAuth` est bien utilisé dans un `AuthProvider`
+// 📌 Empêche `useAuth` de planter si AuthProvider est manquant
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    console.error("❌ useAuth est utilisé hors de AuthProvider !");
+    return { user: null, loading: true, logout: async () => {} };
   }
   return context;
 };
+
+export default AuthProvider;

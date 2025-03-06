@@ -1,6 +1,6 @@
 import { Tabs, usePathname } from "expo-router"; // 🚀 Ajout de `usePathname`
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "../config/AuthContext";
+import { AuthProvider } from "../config/AuthContext";
 
 export default function Layout() {
   const pathname = usePathname(); // 🔥 Permet de savoir sur quelle page on est
@@ -10,6 +10,7 @@ export default function Layout() {
 
   if (isAuthPage) {
     return (
+      <AuthProvider>
       <Tabs
       screenOptions={{
         tabBarActiveTintColor: "#007AFF",
@@ -23,10 +24,12 @@ export default function Layout() {
         },
       }}
     ></Tabs>
+    </AuthProvider>
     )
   }
 
   return (
+    <AuthProvider>
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: "#007AFF",
@@ -100,5 +103,6 @@ export default function Layout() {
         }}
       />
     </Tabs>
+    </AuthProvider>
   );
 }
