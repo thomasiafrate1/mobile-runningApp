@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "930621957124",
+    "project_id": "running-app-bcb74",
+    "storage_bucket": "running-app-bcb74.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:930621957124:android:c33be680a9fac38621c151",
+        "android_client_info": {
+          "package_name": "com.ynov.runningapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9JvO7YVih6Lgh6C4t9nGg4EJomi-3Pfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
